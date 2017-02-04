@@ -7,6 +7,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -16,7 +17,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements FileScanner.Listener {
     private static final String TAG = MainActivity.class.getSimpleName();
-    private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 101;
+    private static final int REQUEST_READ_EXTERNAL_STORAGE = 101;
 
     private FloatingActionButton mScanButton;
     private FileScanner mFileScanner;
@@ -25,6 +26,9 @@ public class MainActivity extends AppCompatActivity implements FileScanner.Liste
     private TextView mResultTextView;
     private TextView mScanningTextView;
     private ProgressBar mProgressBar;
+
+    // progress check
+    private long mFileCount;
     private long mStartTime;
 
     @Override
@@ -69,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements FileScanner.Liste
             // we need permission
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                    MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
+                    REQUEST_READ_EXTERNAL_STORAGE);
 
             /*if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                     Manifest.permission.READ_EXTERNAL_STORAGE)) {
@@ -82,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements FileScanner.Liste
                 // No explanation needed, we can request the permission.
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                        MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
+                        REQUEST_READ_EXTERNAL_STORAGE);
             }*/
 
             return false;
@@ -102,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements FileScanner.Liste
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE: {
+            case REQUEST_READ_EXTERNAL_STORAGE: {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -125,11 +129,14 @@ public class MainActivity extends AppCompatActivity implements FileScanner.Liste
     }
 
     private void OnClickScan() {
+        Log.d(TAG, "OnClickScan()");
+
         // check permission
         if (!checkPermission()) {
             return;
         }
 
+        mFileCount = 0;
         mStartTime = System.currentTimeMillis();
 
         // lock UI
@@ -142,6 +149,24 @@ public class MainActivity extends AppCompatActivity implements FileScanner.Liste
 
         // start scanning in background
         mFileScanner.scanInBackground();
+    }
+
+    @Override
+    public void onScanFile(final StorageUtils.FileEntry fileEntry) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mFileCount++;
+
+                // append entry to text view for fun
+                //mListTextView.setText(String.format("%s\n%s", mListTextView.getText(), fileEntry.toString()));
+                mListTextView.setText(fileEntry.toString());
+
+                // update counter and time
+                final long elapsedTime = System.currentTimeMillis() - mStartTime;
+                mResultTextView.setText(String.format("Files: %d\nTime: %dms", mFileCount, elapsedTime));
+            }
+        });
     }
 
     private Runnable mUpdateUIRunnable = new Runnable() {

@@ -45,7 +45,7 @@ public class StorageUtils {
         return STORAGE_DIR.listFiles() == null || STORAGE_DIR.listFiles().length == 0;
     }
 
-    public static long scanDir(File dir, List<FileEntry> outputList) {
+    public static long scanDir(File dir, List<FileEntry> outputList, Listener listener) {
         Log.d(TAG, "scanDir(): " + dir);
 
         long dirSize = 0;
@@ -57,20 +57,32 @@ public class StorageUtils {
                 final File file = files[i];
                 if (file.isDirectory()) {
                     // add size
-                    dirSize += scanDir(file, outputList);
+                    dirSize += scanDir(file, outputList, listener);
                 } else {
                     // add size
                     long filesize = file.length();
                     dirSize += filesize;
 
                     // map this file
-                    outputList.add(new FileEntry(file.getPath().substring(STORAGE_DIR_PATH.length()), filesize));
+                    final FileEntry fileEntry = new FileEntry(file.getPath().substring(STORAGE_DIR_PATH.length()), filesize);
+                    outputList.add(fileEntry);
+
+                    // callback
+                    if (listener != null) {
+                        listener.onScanFile(fileEntry);
+                    }
                 }
             }
         }
 
         // map this dir
-        outputList.add(new FileEntry(dir.getPath().substring(STORAGE_DIR_PATH.length()) + "/", dirSize));
+        final FileEntry fileEntry = new FileEntry(dir.getPath().substring(STORAGE_DIR_PATH.length()) + "/", dirSize);
+        outputList.add(fileEntry);
+
+        // callback
+        if (listener != null) {
+            listener.onScanFile(fileEntry);
+        }
 
         return dirSize;
     }
@@ -86,5 +98,9 @@ public class StorageUtils {
         }
 
         return sb;
+    }
+
+    public interface Listener {
+        void onScanFile(FileEntry fileEntry);
     }
 }

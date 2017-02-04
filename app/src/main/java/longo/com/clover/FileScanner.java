@@ -63,7 +63,7 @@ public class FileScanner implements Runnable {
         mScanning = true;
 
         mFiles.clear();
-        StorageUtils.scanDir(StorageUtils.STORAGE_DIR, mFiles);
+        StorageUtils.scanDir(StorageUtils.STORAGE_DIR, mFiles, mListener);
 
         // sort descending by size
         Collections.sort(mFiles, comparator);
@@ -87,7 +87,7 @@ public class FileScanner implements Runnable {
         return mOutput;
     }
 
-    public interface Listener {
+    public interface Listener extends StorageUtils.Listener {
         void OnScanComplete();
     }
 }
