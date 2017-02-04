@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity implements FileScanner.Liste
 
     // progress check
     private long mFileCount;
+    private long mTotalSize;
     private long mStartTime;
 
     @Override
@@ -137,6 +138,7 @@ public class MainActivity extends AppCompatActivity implements FileScanner.Liste
         }
 
         mFileCount = 0;
+        mTotalSize = 0;
         mStartTime = System.currentTimeMillis();
 
         // lock UI
@@ -157,6 +159,7 @@ public class MainActivity extends AppCompatActivity implements FileScanner.Liste
             @Override
             public void run() {
                 mFileCount++;
+                if (!fileEntry.dir) mTotalSize += fileEntry.size;
 
                 // append entry to text view for fun
                 //mListTextView.setText(String.format("%s\n%s", mListTextView.getText(), fileEntry.toString()));
@@ -164,7 +167,7 @@ public class MainActivity extends AppCompatActivity implements FileScanner.Liste
 
                 // update counter and time
                 final long elapsedTime = System.currentTimeMillis() - mStartTime;
-                mResultTextView.setText(String.format("Files: %d\nTime: %dms", mFileCount, elapsedTime));
+                mResultTextView.setText(String.format("Files: %d\nSize: %d\nTime: %dms", mFileCount, mTotalSize, elapsedTime));
             }
         });
     }
@@ -180,7 +183,7 @@ public class MainActivity extends AppCompatActivity implements FileScanner.Liste
             // summary
             final List<StorageUtils.FileEntry> files = mFileScanner.getFiles();
             final long elapsedTime = System.currentTimeMillis() - mStartTime;
-            mResultTextView.setText(String.format("Files: %d\nTime: %dms", files.size(), elapsedTime));
+            mResultTextView.setText(String.format("Files: %d\nSize: %d\nTime: %dms", mFileCount, mTotalSize, elapsedTime));
 
             // list the files
             mListTextView.setText(mFileScanner.getOutput());

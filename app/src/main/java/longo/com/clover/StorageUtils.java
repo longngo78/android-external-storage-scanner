@@ -18,16 +18,21 @@ public class StorageUtils {
     public static final String STORAGE_DIR_PATH = STORAGE_DIR.toString();
 
     public static class FileEntry {
+        private final static String DIR_FORMAT = "%s/: %s";
+        private final static String FILE_FORMAT = "%s: %s";
+
         public String path;
+        public boolean dir;
         public long size;
 
-        public FileEntry(String path, long size) {
+        public FileEntry(String path, boolean dir, long size) {
             this.path = path;
+            this.dir = dir;
             this.size = size;
         }
 
         public String toString() {
-            return String.format("%s: %s", path, NumberFormat.getInstance().format(size));
+            return String.format(dir ? DIR_FORMAT : FILE_FORMAT, path, NumberFormat.getInstance().format(size));
         }
     }
 
@@ -64,7 +69,7 @@ public class StorageUtils {
                     dirSize += filesize;
 
                     // map this file
-                    final FileEntry fileEntry = new FileEntry(file.getPath().substring(STORAGE_DIR_PATH.length()), filesize);
+                    final FileEntry fileEntry = new FileEntry(file.getPath().substring(STORAGE_DIR_PATH.length()), false, filesize);
                     outputList.add(fileEntry);
 
                     // callback
@@ -76,7 +81,7 @@ public class StorageUtils {
         }
 
         // map this dir
-        final FileEntry fileEntry = new FileEntry(dir.getPath().substring(STORAGE_DIR_PATH.length()) + "/", dirSize);
+        final FileEntry fileEntry = new FileEntry(dir.getPath().substring(STORAGE_DIR_PATH.length()), true, dirSize);
         outputList.add(fileEntry);
 
         // callback
