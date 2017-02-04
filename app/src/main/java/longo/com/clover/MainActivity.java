@@ -61,9 +61,6 @@ public class MainActivity extends AppCompatActivity implements FileScanner.Liste
         mFileScanner = new FileScanner(this);
 
         updateInfo();
-
-        // check permission
-        checkPermission();
     }
 
     private boolean checkPermission() {
@@ -98,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements FileScanner.Liste
         mInfoTextView.setText("Dir:" + StorageUtils.STORAGE_DIR_PATH
                 + "\nReadable: " + StorageUtils.isExternalStorageReadable()
                 + "\nWritable: " + StorageUtils.isExternalStorageWritable()
-                + (StorageUtils.isExternalStorageEmpty() ? "\nNeeds READ_EXTERNAL_STORAGE permission" : "")
+                + (StorageUtils.isExternalStorageEmpty() ? "\nNeeds READ_EXTERNAL_STORAGE permission!" : "")
         );
     }
 
@@ -111,8 +108,11 @@ public class MainActivity extends AppCompatActivity implements FileScanner.Liste
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
                     // permission was granted, yay!
-                    Toast.makeText(this, R.string.start_scan_now, Toast.LENGTH_LONG).show();
+                    //Toast.makeText(this, R.string.start_scan_now, Toast.LENGTH_LONG).show();
                     updateInfo();
+
+                    // scan now
+                    OnClickScan();
                 } else {
                     // permission denied, boo!
                     Toast.makeText(this, R.string.you_must_allow, Toast.LENGTH_LONG).show();
@@ -158,7 +158,7 @@ public class MainActivity extends AppCompatActivity implements FileScanner.Liste
             mResultTextView.setText(String.format("Files: %d\nTime: %dms", files.size(), elapsedTime));
 
             // list the files
-            mListTextView.setText(StorageUtils.printSizes(files).toString());
+            mListTextView.setText(mFileScanner.getOutput());
         }
     };
 
