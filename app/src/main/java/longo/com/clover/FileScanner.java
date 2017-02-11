@@ -28,12 +28,14 @@ public class FileScanner implements Runnable {
     private final Listener mListener;
 
     // Sets the amount of time an idle thread waits before terminating
-    private static final int KEEP_ALIVE_TIME = 1;
     private static final int NUMBER_OF_CORES = 1;
+    private static final int KEEP_ALIVE_TIME = 10;
     // Sets the Time Unit to seconds
     private static final TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.SECONDS;
     // Creates a thread pool manager
     private final ThreadPoolExecutor mThreadPoolExecutor;
+
+    private String mOutput;
 
     public FileScanner(Listener listener) {
         mListener = listener;
@@ -61,25 +63,31 @@ public class FileScanner implements Runnable {
         mScanning = true;
 
         mFiles.clear();
-        StorageUtils.scanDir(StorageUtils.STORAGE_DIR, mFiles);
+        StorageUtils.scanDir(StorageUtils.STORAGE_DIR, mFiles, mListener);
 
         // sort descending by size
         Collections.sort(mFiles, comparator);
-
-        // finish
-        mScanning = false;
+        // output
+        mOutput = StorageUtils.printSizes(mFiles).toString();
 
         // callback
         if (mListener != null) {
             mListener.OnScanComplete();
         }
+
+        // finish
+        mScanning = false;
     }
 
     public List<StorageUtils.FileEntry> getFiles() {
         return mFiles;
     }
 
-    public interface Listener {
+    public String getOutput() {
+        return mOutput;
+    }
+
+    public interface Listener extends StorageUtils.Listener {
         void OnScanComplete();
     }
 }

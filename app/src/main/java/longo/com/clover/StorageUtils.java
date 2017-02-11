@@ -18,16 +18,21 @@ public class StorageUtils {
     public static final String STORAGE_DIR_PATH = STORAGE_DIR.toString();
 
     public static class FileEntry {
+        private final static String DIR_FORMAT = "%s/: %s";
+        private final static String FILE_FORMAT = "%s: %s";
+
         public String path;
+        public boolean dir;
         public long size;
 
-        public FileEntry(String path, long size) {
+        public FileEntry(String path, boolean dir, long size) {
             this.path = path;
+            this.dir = dir;
             this.size = size;
         }
 
         public String toString() {
-            return String.format("%s: %s", path, NumberFormat.getInstance().format(size));
+            return String.format(dir ? DIR_FORMAT : FILE_FORMAT, path, NumberFormat.getInstance().format(size));
         }
     }
 
@@ -45,7 +50,7 @@ public class StorageUtils {
         return STORAGE_DIR.listFiles() == null || STORAGE_DIR.listFiles().length == 0;
     }
 
-    public static long scanDir(File dir, List<FileEntry> outputList) {
+    public static long scanDir(File dir, List<FileEntry> outputList, Listener listener) {
         Log.d(TAG, "scanDir(): " + dir);
 
         long dirSize = 0;
@@ -57,20 +62,32 @@ public class StorageUtils {
                 final File file = files[i];
                 if (file.isDirectory()) {
                     // add size
-                    dirSize += scanDir(file, outputList);
+                    dirSize += scanDir(file, outputList, listener);
                 } else {
                     // add size
                     long filesize = file.length();
                     dirSize += filesize;
 
                     // map this file
-                    outputList.add(new FileEntry(file.getPath().substring(STORAGE_DIR_PATH.length()), filesize));
+                    final FileEntry fileEntry = new FileEntry(file.getPath().substring(STORAGE_DIR_PATH.length()), false, filesize);
+                    outputList.add(fileEntry);
+
+                    // callback
+                    if (listener != null) {
+                        listener.onScanFile(fileEntry);
+                    }
                 }
             }
         }
 
         // map this dir
-        outputList.add(new FileEntry(dir.getPath().substring(STORAGE_DIR_PATH.length()) + "/", dirSize));
+        final FileEntry fileEntry = new FileEntry(dir.getPath().substring(STORAGE_DIR_PATH.length()), true, dirSize);
+        outputList.add(fileEntry);
+
+        // callback
+        if (listener != null) {
+            listener.onScanFile(fileEntry);
+        }
 
         return dirSize;
     }
@@ -86,5 +103,9 @@ public class StorageUtils {
         }
 
         return sb;
+    }
+
+    public interface Listener {
+        void onScanFile(FileEntry fileEntry);
     }
 }
